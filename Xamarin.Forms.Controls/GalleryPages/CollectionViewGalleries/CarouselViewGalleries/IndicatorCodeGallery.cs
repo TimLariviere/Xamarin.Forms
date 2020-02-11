@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Xamarin.Forms.Internals;
 using Xamarin.Forms.PlatformConfiguration;
 using Xamarin.Forms.PlatformConfiguration.iOSSpecific;
@@ -8,6 +9,7 @@ namespace Xamarin.Forms.Controls.GalleryPages.CollectionViewGalleries.CarouselVi
 	[Preserve(AllMembers = true)]
 	public class IndicatorCodeGallery : ContentPage
 	{
+		CarouselView _carouselView;
 		public IndicatorCodeGallery()
 		{
 			Title = "IndicatorView Gallery";
@@ -24,6 +26,7 @@ namespace Xamarin.Forms.Controls.GalleryPages.CollectionViewGalleries.CarouselVi
 					new RowDefinition { Height = GridLength.Auto },
 					new RowDefinition { Height = GridLength.Auto },
 					new RowDefinition { Height = GridLength.Star },
+					new RowDefinition { Height = GridLength.Auto },
 					new RowDefinition { Height = GridLength.Auto }
 				}
 			};
@@ -36,7 +39,7 @@ namespace Xamarin.Forms.Controls.GalleryPages.CollectionViewGalleries.CarouselVi
 
 			var itemTemplate = ExampleTemplates.CarouselTemplate();
 
-			var carouselView = new CarouselView
+			_carouselView = new CarouselView
 			{
 				ItemsLayout = itemsLayout,
 				ItemTemplate = itemTemplate,
@@ -44,9 +47,8 @@ namespace Xamarin.Forms.Controls.GalleryPages.CollectionViewGalleries.CarouselVi
 				AutomationId = "TheCarouselView"
 			};
 
-			layout.Children.Add(carouselView);
-
-			var generator = new ItemsSourceGenerator(carouselView, nItems, ItemsSourceType.ObservableCollection);
+			layout.Children.Add(_carouselView);
+			var generator = new ItemsSourceGenerator(_carouselView, nItems, ItemsSourceType.ObservableCollection);
 
 			layout.Children.Add(generator);
 
@@ -59,10 +61,12 @@ namespace Xamarin.Forms.Controls.GalleryPages.CollectionViewGalleries.CarouselVi
 				IndicatorColor = Color.Gray,
 				SelectedIndicatorColor = Color.Black,
 				IndicatorsShape = IndicatorShape.Square,
-				AutomationId = "TheIndicatorView"
+				AutomationId = "TheIndicatorView",
+				Count = 5,
+				Position = 2
 			};
 
-			IndicatorView.SetItemsSourceBy(indicatorView, carouselView);
+			IndicatorView.SetItemsSourceBy(indicatorView, _carouselView);
 
 			layout.Children.Add(indicatorView);
 
@@ -151,10 +155,28 @@ namespace Xamarin.Forms.Controls.GalleryPages.CollectionViewGalleries.CarouselVi
 			Grid.SetRow(generator, 0);
 			Grid.SetRow(stckColors, 1);
 			Grid.SetRow(stckTemplate, 2);
-			Grid.SetRow(carouselView, 3);
+			Grid.SetRow(_carouselView, 3);
 			Grid.SetRow(indicatorView, 4);
 
+			var btn = new Button
+			{
+				Text = "Remove",
+				Command = new Command(() =>
+				{
+					var items = (_carouselView.ItemsSource as ObservableCollection<CollectionViewGalleryTestItem>);
+					items.Remove(items[0]);
+				})
+			};
+			_carouselView.PropertyChanged += CarouselView_PropertyChanged;
+			layout.Children.Add(btn);
+			Grid.SetRow(btn, 5);
 			Content = layout;
+		}
+
+		void CarouselView_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+			if(e.PropertyName ==  nameof(CarouselView.Position))
+				System.Diagnostics.Debug.WriteLine($"Position {_carouselView.Position}");
 		}
 	}
 }
